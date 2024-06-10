@@ -16,8 +16,8 @@ class CollaborativeFiltering:
   def train(self):
     # Calculate cosine similarity between users
     self.user_similarity = cosine_similarity(self.user_item_matrix)
-    print("User similarity matrix:")
-    print(self.user_similarity)
+    # print("User similarity matrix:")
+    # print(self.user_similarity)
 
   def recommend(self, user_id, num_recommendations=10):
     if self.user_similarity is None:
@@ -42,10 +42,29 @@ class CollaborativeFiltering:
     recommended_item_ids = self.user_item_matrix.columns[recommended_indices]
     
     return recommended_item_ids.tolist()
+  
+  def enrich_recommendations(self, recommended_product_ids):
+    # Filter the data to get the details of the recommended products
+    enriched_recommendations = self.data[self.data['item_id'].isin(recommended_product_ids)]
+
+    # Drop duplicates by 'item_id'
+    enriched_recommendations = enriched_recommendations.drop_duplicates(subset='item_id')
+
+    # Reorder the recommendations to match the order of recommended_product_ids
+    enriched_recommendations = enriched_recommendations.set_index('item_id').reindex(recommended_product_ids).reset_index()
+
+    # Drop unnecessary columns
+    enriched_recommendations = enriched_recommendations.drop(columns=['rating'])
+    enriched_recommendations = enriched_recommendations.drop(columns=['user_id'])
+
+    # Rename column 'item_id' to 'id'
+    enriched_recommendations.rename(columns={'item_id': 'id'}, inplace=True)
+
+    return enriched_recommendations.to_dict(orient='records')
 
 if __name__ == "__main__":
   # Load data
-  data = pd.read_csv("data/processed/data.csv", usecols=['user_id', 'item_id', 'rating', 'name', 'category', 'price'])
+  data = pd.read_csv("data/processed/data.csv", usecols=['user_id', 'item_id', 'rating', 'name', 'category', 'price', 'description'])
 
   # Train the model
   cf = CollaborativeFiltering(data)
@@ -54,4 +73,8 @@ if __name__ == "__main__":
   # Get recommendations for a specific user
   user_id = 200
   recommendations = cf.recommend(user_id)
-  print(f"Recomendaciones para el usuario {user_id}", recommendations)
+
+  # Enrich recommendations with product details
+  enriched_recommendations = cf.enrich_recommendations(recommendations)
+
+  print(f"Recommendations for user {user_id}", enriched_recommendations)
