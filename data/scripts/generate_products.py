@@ -1,6 +1,8 @@
 import csv
 import random
 
+# DEPRECATED - TODO UPDATE
+# This should follow the same product model as in get_products.py
 def generate_products(num_items, price_range=(10.0, 2500.0), categories=[], description_adjectives=[], file_path='data/raw/products.csv'):
   """
   Generates product data and writes it to a CSV file

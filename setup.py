@@ -11,6 +11,7 @@ setup(
     'fastapi',
     'uvicorn',
     'pytest',
-    'pickle'
+    'requests',
+    'pylint'
   ],
 )

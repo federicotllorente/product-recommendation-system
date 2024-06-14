@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-def generate_ratings(num_users, num_items, max_ratings_per_user, rating_range=(1, 5), file_path='data/raw/ratings.csv'):
+def generate_ratings(num_users, num_items, max_ratings_per_user, rating_range=(1, 5), file_path='data/raw/ratings.csv', productList=None):
   """
   Generates a CSV file with user_id, item_id and rating
   
@@ -20,9 +20,20 @@ def generate_ratings(num_users, num_items, max_ratings_per_user, rating_range=(1
   for user_id in range(1, num_users + 1):
     items_rated = set()
     for _ in range(ratings_per_user[user_id - 1]):
-      item_id = np.random.randint(1, num_items + 1)
+      item_idx = np.random.randint(1, num_items + 1)
+      item_id = item_idx
+
+      if productList and len(productList) >= item_idx:
+        item_id = productList[item_idx - 1]
+
+      # Prevent duplicate reviews for a same user
       while item_id in items_rated:
-        item_id = np.random.randint(1, num_items + 1)
+        item_idx = np.random.randint(1, num_items + 1)
+        item_id = item_idx
+
+        if productList and len(productList) >= item_idx:
+          item_id = productList[item_idx - 1]
+
       items_rated.add(item_id)
       rating = np.random.randint(rating_range[0], rating_range[1] + 1)
       all_ratings.append((user_id, item_id, rating))
@@ -32,11 +43,16 @@ def generate_ratings(num_users, num_items, max_ratings_per_user, rating_range=(1
   
   # Save in CSV
   df.to_csv(file_path, index=False)
-  print(f'Archivo generado en: {file_path}')
+  print(f'Generated file in: {file_path}')
 
 if __name__ == "__main__":
-  num_users = 250
-  num_items = 5000
-  ratings_per_user = 15
+  num_users = 50 # All these users will 'write' a review
+  num_items = 209 # 100
+  max_ratings_per_user = 4
+  rating_range=(1, 5)
+  file_path='data/raw/smartphones/ratings.csv'
+
+  product_details_df = pd.read_csv('data/raw/smartphones/product_details.csv')
+  productList = product_details_df['id'].tolist()
   
-  generate_ratings(num_users, num_items, ratings_per_user)
+  generate_ratings(num_users, num_items, max_ratings_per_user, rating_range, file_path, productList)
